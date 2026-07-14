@@ -1,0 +1,6 @@
+{
+  "name": "Raonar - Digital Engineering Laboratory",
+  "description": "A living lab notebook, technical knowledge base, and research wiki for Raonar, focusing on Biomedical Signal Processing & Neural Engineering.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
