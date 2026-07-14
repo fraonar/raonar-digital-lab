@@ -17,7 +17,11 @@ import {
   getNodeBySlug,
   getAllNodes,
   getProfile,
+  getSiteSettings,
+  getSkills,
+  getExperience,
   ContentNode,
+  Frontmatter,
   getContentError,
 } from "./lib/content";
 import { MarkdownRenderer } from "./components/MarkdownRenderer";
@@ -159,12 +163,26 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  // Compile stats
+  // Load Content
   const stats = getStats();
   const currentMission = getCurrentMission();
   const profile = getProfile();
   const allNodes = getAllNodes();
   const allSlugs = allNodes.map((n) => n.slug);
+
+  const siteSettings = getSiteSettings();
+  const settingsFm: Frontmatter = siteSettings?.frontmatter || ({} as Frontmatter);
+
+  const skillsNode = getSkills();
+  const skillsCategories = skillsNode?.frontmatter.categories || [];
+  const experienceList = getExperience();
+
+  // Set browser title dynamically from settings
+  useEffect(() => {
+    if (settingsFm.site_title) {
+      document.title = settingsFm.site_title;
+    }
+  }, [settingsFm.site_title]);
 
   // Filter nodes for quick global search
   const filteredSearchNodes = searchQuery
@@ -197,10 +215,10 @@ export default function App() {
       <div className="flex flex-col items-center justify-center min-h-screen bg-red-950/20 text-red-200 p-8 font-mono">
         <div className="max-w-2xl p-6 bg-zinc-900 border border-red-500/30 rounded-lg">
           <h2 className="text-xl font-bold text-red-400 flex items-center gap-2 mb-4">
-            ⚠️ MDX Frontmatter Validation Error
+            ⚠️ Markdown Frontmatter Validation Error
           </h2>
           <p className="text-sm mb-4 leading-relaxed">
-            The laboratory compiler failed to build because one of your local Obsidian MDX
+            The laboratory compiler failed to build because one of your local Obsidian Markdown
             source files contains malformed metadata or lacks required fields:
           </p>
           <pre className="p-4 bg-zinc-950 border border-zinc-800 text-xs text-red-300 rounded overflow-x-auto whitespace-pre-wrap leading-normal">
@@ -255,7 +273,7 @@ export default function App() {
               <Search className="absolute left-2.5 top-2.5 w-3.5 h-3.5 opacity-50" />
               <input
                 type="text"
-                placeholder="Query knowledge base..."
+                placeholder={settingsFm.search_placeholder || "Query knowledge base..."}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className={`w-full pl-8 pr-3 py-1.5 text-xs rounded-md border focus:ring-1 focus:ring-[#32D74B]/30 focus:border-[#32D74B] font-mono transition-all outline-none ${
@@ -269,7 +287,7 @@ export default function App() {
                   onClick={() => setSearchQuery("")}
                   className="absolute right-2 top-2 text-[10px] opacity-60 hover:opacity-100"
                 >
-                  Clear
+                  {settingsFm.search_clear || "Clear"}
                 </button>
               )}
             </div>
@@ -277,14 +295,14 @@ export default function App() {
 
           <ul className="space-y-1 px-3 text-[12px] font-mono font-medium">
             {[
-              { view: "home", label: "HOME", icon: Home },
-              { view: "about", label: "ABOUT", icon: User },
-              { view: "projects", label: "PROJECTS", icon: FolderCode },
-              { view: "lab-notebook", label: "LAB NOTEBOOK", icon: BookOpen },
-              { view: "research-notes", label: "RESEARCH NOTES", icon: Compass },
-              { view: "papers", label: "PAPERS", icon: FileText },
-              { view: "resources", label: "RESOURCES", icon: Layers },
-              { view: "contact", label: "CONTACT", icon: Mail },
+              { view: "home", label: settingsFm.nav_home || "HOME", icon: Home },
+              { view: "about", label: settingsFm.nav_about || "ABOUT", icon: User },
+              { view: "projects", label: settingsFm.nav_projects || "PROJECTS", icon: FolderCode },
+              { view: "lab-notebook", label: settingsFm.nav_lab || "LAB NOTEBOOK", icon: BookOpen },
+              { view: "research-notes", label: settingsFm.nav_notes || "RESEARCH NOTES", icon: Compass },
+              { view: "papers", label: settingsFm.nav_papers || "PAPERS", icon: FileText },
+              { view: "resources", label: settingsFm.nav_resources || "RESOURCES", icon: Layers },
+              { view: "contact", label: settingsFm.nav_contact || "CONTACT", icon: Mail },
             ].map((item, index) => {
               const isActive =
                 route.view === item.view ||
@@ -330,7 +348,7 @@ export default function App() {
             <Search className="absolute left-2 top-2 w-3 h-3 opacity-40" />
             <input
               type="text"
-              placeholder="Search..."
+              placeholder={settingsFm.search_placeholder || "Search..."}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className={`pl-6 pr-2 py-1 text-xs rounded border outline-none font-mono ${
@@ -345,10 +363,10 @@ export default function App() {
         {/* Header / Mission Statement */}
         <header className={`p-6 md:p-8 border-b shrink-0 ${isLight ? 'bg-zinc-50 border-zinc-200' : 'bg-[#0F0F11] border-[#2D2D30]'}`}>
           <p className={`text-[11px] font-mono uppercase mb-2 tracking-widest ${isLight ? 'text-[#15803D]' : 'text-[#32D74B]'}`}>
-            Active Focus
+            {settingsFm.focus_label || "Active Focus"}
           </p>
           <h2 className={`text-xl sm:text-2xl md:text-3xl font-light tracking-tight leading-tight ${isLight ? 'text-zinc-900' : 'text-white'}`}>
-            {currentMission?.frontmatter.building || "Exploring neural interfaces, biomedical signals, and embedded systems."}
+            {currentMission?.frontmatter.building || settingsFm.active_focus_fallback || "Exploring neural interfaces, biomedical signals, and embedded systems."}
           </h2>
         </header>
 
@@ -358,17 +376,19 @@ export default function App() {
             <div className={`p-5 rounded-lg border shadow-2xl ${isLight ? 'bg-white border-zinc-300 text-zinc-900' : 'bg-[#111113] border-[#2D2D30] text-zinc-200'}`}>
               <div className={`flex items-center justify-between pb-3 border-b mb-3 ${isLight ? 'border-zinc-200' : 'border-[#2D2D30]'}`}>
                 <span className="text-xs font-mono opacity-60">
-                  Found {filteredSearchNodes.length} matches in knowledge files
+                  Found {filteredSearchNodes.length} {settingsFm.found_matches_label || "matches in knowledge files"}
                 </span>
                 <button
                   onClick={() => setSearchQuery("")}
                   className="text-xs font-mono text-[#32D74B] hover:underline cursor-pointer"
                 >
-                  Close Search Overlay
+                  {settingsFm.close_search_label || "Close Search Overlay"}
                 </button>
               </div>
               {filteredSearchNodes.length === 0 ? (
-                <div className="text-sm font-mono opacity-50 py-4">No matching records found.</div>
+                <div className="text-sm font-mono opacity-50 py-4">
+                  {settingsFm.no_resources_label || "No matching records found."}
+                </div>
               ) : (
                 <div className="max-h-60 overflow-y-auto space-y-2.5 pr-2">
                   {filteredSearchNodes.map((node) => (
@@ -429,13 +449,13 @@ export default function App() {
                     <div className="relative z-10 space-y-4">
                       <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full ${isLight ? 'bg-emerald-50 text-[#15803D] border-[#15803D]/20' : 'bg-emerald-500/10 text-[#32D74B] border-emerald-500/10'} text-xs font-mono`}>
                         <Sparkles className="w-3.5 h-3.5" />
-                        <span>{profile?.frontmatter.role || "Biomedical Signal Processing & Neural Engineering"}</span>
+                        <span>{profile?.frontmatter.role || settingsFm.active_focus_fallback || "Biomedical Signal Processing & Neural Engineering"}</span>
                       </div>
                       <h1 className={`text-3xl font-bold tracking-tight ${isLight ? 'text-zinc-950' : 'text-white'}`}>
-                        Welcome to {profile?.frontmatter.title || "Raonar"}'s Digital Laboratory
+                        {settingsFm.hero_welcome || "Welcome to the Digital Laboratory"}
                       </h1>
                       <p className={`text-[15px] leading-relaxed max-w-2xl ${textSubtleStyle}`}>
-                        {profile?.frontmatter.summary || "An open-science engineering repository, research wiki, and living notebook tracking investigations in high-density EEG decoders, microvolt analog bio-amplifiers, and bionic prosthetics."}
+                        {profile?.frontmatter.summary || settingsFm.hero_desc_fallback || "An open-science engineering repository..."}
                       </p>
                     </div>
                     <div className={`absolute right-0 bottom-0 opacity-10 pointer-events-none select-none translate-x-12 translate-y-12 ${isLight ? 'text-[#15803D]' : 'text-[#32D74B]'}`}>
@@ -443,46 +463,50 @@ export default function App() {
                     </div>
                   </div>
 
-                  {/* Current Mission - pulled from current-mission.mdx */}
+                  {/* Current Mission - pulled from current-mission.md */}
                   {currentMission && (
                     <div className={`p-6 rounded-xl border ${cardStyle} space-y-5`}>
                       <div className={`flex items-center justify-between pb-3 border-b ${isLight ? 'border-zinc-200' : 'border-[#2D2D30]'}`}>
                         <div className="flex items-center gap-2">
                           <Layers className={`w-4.5 h-4.5 ${isLight ? 'text-[#15803D]' : 'text-[#32D74B]'}`} />
                           <h2 className={`text-base font-semibold font-mono tracking-tight uppercase ${isLight ? 'text-zinc-950' : 'text-white'}`}>
-                            Current Active Mission
+                            {settingsFm.focus_label || "Active Focus"}
                           </h2>
                         </div>
                         <span className={`text-[10px] font-mono ${isLight ? 'text-zinc-500' : 'text-zinc-400'}`}>
-                          Last Sync: {formatDate(currentMission.frontmatter.date)}
+                          {settingsFm.last_sync_label || "Last Sync"}: {formatDate(currentMission.frontmatter.date)}
                         </span>
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
                         <div className="md:col-span-12 space-y-1">
                           <span className="text-[10px] tracking-widest text-emerald-400 font-mono uppercase font-semibold">
-                            ACTIVE INITIATIVE
+                            {settingsFm.active_initiative_label || "ACTIVE INITIATIVE"}
                           </span>
                           <p className="text-sm text-zinc-200 font-medium">
                             {currentMission.frontmatter.title}
                           </p>
                         </div>
-                        <div className="md:col-span-12 space-y-1">
-                          <span className="text-[10px] tracking-widest text-amber-500 font-mono uppercase font-semibold">
-                            CURRENT BOTTLENECK
-                          </span>
-                          <p className="text-sm text-zinc-300">
-                            {currentMission.frontmatter.bottleneck}
-                          </p>
-                        </div>
-                        <div className="md:col-span-12 space-y-1">
-                          <span className="text-[10px] tracking-widest text-cyan-400 font-mono uppercase font-semibold">
-                            NEXT CRITICAL MILESTONE
-                          </span>
-                          <p className="text-sm text-zinc-300">
-                            {currentMission.frontmatter.milestone}
-                          </p>
-                        </div>
+                        {currentMission.frontmatter.bottleneck && (
+                          <div className="md:col-span-12 space-y-1">
+                            <span className="text-[10px] tracking-widest text-amber-500 font-mono uppercase font-semibold">
+                              {settingsFm.current_bottleneck_label || "CURRENT BOTTLENECK"}
+                            </span>
+                            <p className="text-sm text-zinc-300">
+                              {currentMission.frontmatter.bottleneck}
+                            </p>
+                          </div>
+                        )}
+                        {currentMission.frontmatter.milestone && (
+                          <div className="md:col-span-12 space-y-1">
+                            <span className="text-[10px] tracking-widest text-cyan-400 font-mono uppercase font-semibold">
+                              {settingsFm.next_milestone_label || "NEXT CRITICAL MILESTONE"}
+                            </span>
+                            <p className="text-sm text-zinc-300">
+                              {currentMission.frontmatter.milestone}
+                            </p>
+                          </div>
+                        )}
                       </div>
 
                       <div className="pt-2 border-t border-zinc-800/50">
@@ -499,11 +523,11 @@ export default function App() {
                   {/* Stats Dashboard Bento Grid */}
                   <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
                     {[
-                      { label: "Active Projects", value: stats.projectsCount, icon: FolderCode, color: "text-emerald-500" },
-                      { label: "Papers Read", value: stats.papersRead, icon: FileText, color: "text-cyan-400" },
-                      { label: "Research Notes", value: stats.notesLog, icon: Compass, color: "text-purple-400" },
-                      { label: "Experiments Run", value: stats.totalExperiments, icon: BookOpen, color: "text-amber-500" },
-                      { label: "Lab Hours", value: stats.estimatedLabHours, icon: Clock, color: "text-indigo-400" },
+                      { label: settingsFm.stats_projects || "Active Projects", value: stats.projectsCount, icon: FolderCode, color: "text-emerald-500" },
+                      { label: settingsFm.stats_papers || "Papers Read", value: stats.papersRead, icon: FileText, color: "text-cyan-400" },
+                      { label: settingsFm.stats_notes || "Research Notes", value: stats.notesLog, icon: Compass, color: "text-purple-400" },
+                      { label: settingsFm.stats_experiments || "Experiments Run", value: stats.totalExperiments, icon: BookOpen, color: "text-amber-500" },
+                      { label: settingsFm.stats_hours || "Lab Hours", value: stats.estimatedLabHours, icon: Clock, color: "text-indigo-400" },
                     ].map((s, idx) => (
                       <div
                         key={idx}
@@ -528,13 +552,13 @@ export default function App() {
                   <div className="space-y-4">
                     <div className="flex justify-between items-center pb-2 border-b border-zinc-800/50">
                       <h2 className="text-sm font-semibold font-mono tracking-tight text-white uppercase">
-                        Featured Systems
+                        {settingsFm.featured_systems_label || "Featured Systems"}
                       </h2>
                       <button
                         onClick={() => navigateTo("projects")}
                         className="text-xs font-mono text-emerald-400 hover:text-emerald-300 inline-flex items-center gap-1 cursor-pointer"
                       >
-                        <span>All projects</span>
+                        <span>{settingsFm.all_projects_label || "All projects"}</span>
                         <ArrowRight className="w-3 h-3" />
                       </button>
                     </div>
@@ -545,7 +569,7 @@ export default function App() {
                         .map((project) => (
                           <div
                             key={project.slug}
-                            className={`p-5 rounded-xl border ${cardStyle} ${hoverCardStyle} transition-all flex flex-col justify-between`}
+                            className={`p-5 rounded-xl border ${cardStyle} ${hoverCardStyle} transition-all flex flex-col justify-between gap-4`}
                           >
                             <div>
                               <div className="flex items-center justify-between gap-2 mb-3">
@@ -573,7 +597,7 @@ export default function App() {
                               onClick={() => navigateTo("project-detail", project.slug)}
                               className="text-xs font-mono text-emerald-400 hover:text-emerald-300 inline-flex items-center gap-1.5 mt-2 cursor-pointer w-fit"
                             >
-                              <span>Examine technical file</span>
+                              <span>{settingsFm.examine_technical_file_label || "Examine technical file"}</span>
                               <ChevronRight className="w-3.5 h-3.5" />
                             </button>
                           </div>
@@ -585,13 +609,13 @@ export default function App() {
                   <div className="space-y-4">
                     <div className="flex justify-between items-center pb-2 border-b border-zinc-800/50">
                       <h2 className="text-sm font-semibold font-mono tracking-tight text-white uppercase">
-                        Recent Log Entries
+                        {settingsFm.recent_log_entries_label || "Recent Log Entries"}
                       </h2>
                       <button
                         onClick={() => navigateTo("lab-notebook")}
                         className="text-xs font-mono text-emerald-400 hover:text-emerald-300 inline-flex items-center gap-1 cursor-pointer"
                       >
-                        <span>Open lab book</span>
+                        <span>{settingsFm.open_lab_book_label || "Open lab book"}</span>
                         <ArrowRight className="w-3 h-3" />
                       </button>
                     </div>
@@ -644,7 +668,7 @@ export default function App() {
                       <div className="w-14 h-14 rounded-full bg-emerald-500/10 border border-[#32D74B]/20 flex items-center justify-center text-[#32D74B] overflow-hidden shrink-0">
                         {profile?.frontmatter.avatarUrl ? (
                           <img
-                            src={profile.frontmatter.avatarUrl}
+                            src={profile.frontmatter.avatarUrl.startsWith("http") ? profile.frontmatter.avatarUrl : "/" + profile.frontmatter.avatarUrl}
                             alt={profile.frontmatter.title || "Profile"}
                             referrerPolicy="no-referrer"
                             className="w-full h-full object-cover"
@@ -685,94 +709,69 @@ export default function App() {
                         />
                       </div>
                     ) : (
-                      <>
-                        <div className="space-y-4 text-[15px] leading-relaxed text-zinc-300">
-                          <p>
-                            I work at the junction of **biological signals** and **embedded computing systems**. My goal is
-                            to construct hardware and algorithms that decode complex somatic impulses (specifically muscular
-                            EMG and cortical EEG) and translate them into robust digital-physical commands.
-                          </p>
-                          <p>
-                            Currently, I serve as a research specialist focusing on low-latency analog front-ends, lock-in
-                            optical amplification for photometry, and localized machine learning on ARM Cortex processors.
-                            I advocate strongly for **Open-Science** and reproducible open-source laboratory systems.
-                          </p>
-                        </div>
+                      <div className="text-sm font-mono opacity-50 py-4">
+                        {settingsFm.profile_not_found_label || "Profile configuration not found."}
+                      </div>
+                    )}
 
-                        {/* Skills Bento Grid */}
-                        <div className="pt-6 border-t border-zinc-800">
-                          <h3 className="text-sm font-semibold font-mono tracking-tight text-white uppercase mb-4">
-                            Structured Skills Index
-                          </h3>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            {[
-                              {
-                                category: "Signal Processing",
-                                items: ["sEMG pattern recognition", "FFT & STFT analysis", "Welch's PSD estimation", "Common Spatial Patterns (CSP)"],
-                              },
-                              {
-                                category: "Embedded & Hardware",
-                                items: ["STM32 & RP2040 microcontrollers", "SPI DMA circular buffers", "Multi-layer high-speed PCB (KiCad)", "Differential guard routing"],
-                              },
-                              {
-                                category: "Neuroscience Targets",
-                                items: ["ADS1292 biopotential front-ends", "Ratiometric calcium GCaMP recording", "EEG 10-20 somatotopic grid positioning", "Motor cortex imagery (Mu/Beta)"],
-                              },
-                              {
-                                category: "Software & Inference",
-                                items: ["Python & PyTorch", "Lab Streaming Layer (LSL) streaming", "EEGNet CNN optimization", "Lightweight LDA on-chip models"],
-                              },
-                            ].map((skill, idx) => (
-                              <div key={idx} className="p-4 rounded-lg bg-zinc-900/40 border border-zinc-800/60">
-                                <span className="text-xs font-bold font-mono tracking-wide text-emerald-400 uppercase">
-                                  {skill.category}
-                                </span>
-                                <ul className="mt-2.5 space-y-1.5">
-                                  {skill.items.map((item) => (
-                                    <li key={item} className="text-xs text-zinc-300 flex items-center gap-1.5">
-                                      <ChevronRight className="w-3 h-3 text-emerald-500 shrink-0" />
-                                      <span>{item}</span>
-                                    </li>
-                                  ))}
-                                </ul>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-
-                        {/* How I Work / Manifesto */}
-                        <div className="pt-6 border-t border-zinc-800">
-                          <h3 className="text-sm font-semibold font-mono tracking-tight text-white uppercase mb-4">
-                            Laboratory Tenets
-                          </h3>
-                          <div className="space-y-4">
-                            {[
-                              {
-                                title: "Open Science by Default",
-                                desc: "All mechanical CADs, firmware binaries, and analog board layouts are released on the public index. Peer review is facilitated by transparency.",
-                              },
-                              {
-                                title: "Hardware-Software Co-design",
-                                desc: "Isolating analog grounds is just as critical as writing low-jitter DMA handlers. Robust systems balance physical physics and logical architecture.",
-                              },
-                              {
-                                title: "Empirical Humility",
-                                desc: "No matter how sophisticated a deep temporal neural model is, session impedance drifts and motion artifacts will disrupt raw inputs. Plan for physical failures.",
-                              },
-                            ].map((tenet, idx) => (
-                              <div key={idx} className="flex gap-4">
-                                <div className="w-6 h-6 rounded bg-zinc-800 flex items-center justify-center text-xs font-mono text-zinc-400 shrink-0 mt-0.5">
-                                  0{idx + 1}
-                                </div>
+                    {/* Dynamic Timeline - Professional Experience */}
+                    {experienceList.length > 0 && (
+                      <div className="pt-6 border-t border-zinc-850">
+                        <h3 className="text-sm font-semibold font-mono tracking-tight text-white uppercase mb-4">
+                          {settingsFm.experience_title_label || "Professional Experience"}
+                        </h3>
+                        <div className="space-y-6">
+                          {experienceList.map((exp) => (
+                            <div key={exp.slug} className={`p-5 rounded-xl border ${cardStyle} relative`}>
+                              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-2">
                                 <div>
-                                  <h4 className="text-sm font-bold text-white">{tenet.title}</h4>
-                                  <p className="text-xs text-zinc-400 mt-1 leading-relaxed">{tenet.desc}</p>
+                                  <h4 className="text-sm font-bold text-white">{exp.frontmatter.title}</h4>
+                                  <p className={`text-xs font-mono ${isLight ? 'text-[#15803D]' : 'text-[#32D74B]'}`}>
+                                    {exp.frontmatter.organization} {exp.frontmatter.location ? `• ${exp.frontmatter.location}` : ''}
+                                  </p>
+                                </div>
+                                <div className="text-[10px] font-mono text-zinc-500">
+                                  {formatDate(exp.frontmatter.date)} — {exp.frontmatter.endDate || "Present"}
                                 </div>
                               </div>
-                            ))}
-                          </div>
+                              <div className={`prose max-w-none text-xs leading-relaxed ${isLight ? 'text-zinc-700' : 'text-zinc-300'}`}>
+                                <MarkdownRenderer
+                                  content={exp.content}
+                                  onNavigate={navigateTo}
+                                  allSlugs={allSlugs}
+                                  isLight={isLight}
+                                />
+                              </div>
+                            </div>
+                          ))}
                         </div>
-                      </>
+                      </div>
+                    )}
+
+                    {/* Dynamic Skills Categories */}
+                    {skillsCategories.length > 0 && (
+                      <div className="pt-6 border-t border-zinc-850">
+                        <h3 className="text-sm font-semibold font-mono tracking-tight text-white uppercase mb-4">
+                          {skillsNode?.frontmatter.title || settingsFm.tenets_title_label || "Structured Skills Index"}
+                        </h3>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          {skillsCategories.map((skill: any, idx: number) => (
+                            <div key={idx} className={`p-4 rounded-lg border ${isLight ? 'bg-zinc-50 border-zinc-200' : 'bg-zinc-900/40 border-zinc-850'}`}>
+                              <span className={`text-xs font-bold font-mono tracking-wide uppercase ${isLight ? 'text-[#15803D]' : 'text-[#32D74B]'}`}>
+                                {skill.name}
+                              </span>
+                              <ul className="mt-2.5 space-y-1.5">
+                                {(skill.items || []).map((item: string) => (
+                                  <li key={item} className="text-xs text-zinc-300 flex items-center gap-1.5">
+                                    <ChevronRight className={`w-3 h-3 ${isLight ? 'text-[#15803D]' : 'text-[#32D74B]'} shrink-0`} />
+                                    <span className={isLight ? 'text-zinc-700' : 'text-zinc-300'}>{item}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
                     )}
                   </div>
                 </div>
@@ -783,10 +782,10 @@ export default function App() {
                 <div className="space-y-6">
                   <div className={`pb-4 border-b ${isLight ? 'border-zinc-200' : 'border-zinc-800/50'}`}>
                     <h1 className={`text-2xl font-bold tracking-tight ${isLight ? 'text-zinc-950' : 'text-white'}`}>
-                      Active Technical Projects
+                      {settingsFm.project_list_title || "Active Technical Projects"}
                     </h1>
                     <p className={`text-sm ${textSubtleStyle} mt-1.5`}>
-                      Fully documented hardware-software systems compiled from the laboratory workspace.
+                      {settingsFm.project_list_desc || "Fully documented hardware-software systems..."}
                     </p>
                   </div>
 
@@ -838,7 +837,7 @@ export default function App() {
                             onClick={() => navigateTo("project-detail", project.slug)}
                             className="text-xs font-mono text-emerald-400 hover:text-emerald-300 inline-flex items-center gap-1 cursor-pointer"
                           >
-                            <span>Read project wiki</span>
+                            <span>{settingsFm.read_project_wiki_label || "Read project wiki"}</span>
                             <ArrowRight className="w-3.5 h-3.5" />
                           </button>
                         </div>
@@ -853,7 +852,7 @@ export default function App() {
                 <div className="space-y-6">
                   {(() => {
                     const project = getNodeBySlug(route.slug || "");
-                    if (!project) return <div>Project not found.</div>;
+                    if (!project) return <div>{settingsFm.project_not_found_label || "Project not found."}</div>;
 
                     const backlinks = getBacklinks(project.slug);
 
@@ -865,7 +864,7 @@ export default function App() {
                             onClick={() => navigateTo("projects")}
                             className="text-xs font-mono text-emerald-400 hover:underline inline-flex items-center gap-1 cursor-pointer"
                           >
-                            ← Back to projects
+                            {settingsFm.back_to_projects_label || "← Back to projects"}
                           </button>
 
                           <div className="space-y-2">
@@ -874,10 +873,10 @@ export default function App() {
                                 {project.frontmatter.status}
                               </span>
                               <span className="text-xs font-mono text-zinc-500">
-                                Date Logged: {formatDate(project.frontmatter.date)}
+                                {settingsFm.date_logged_label || "Date Logged:"} {formatDate(project.frontmatter.date)}
                               </span>
                             </div>
-                            <h1 className="text-2xl font-bold tracking-tight text-white">
+                            <h1 className="text-xl font-bold tracking-tight text-white">
                               {project.frontmatter.title}
                             </h1>
                           </div>
@@ -891,7 +890,7 @@ export default function App() {
                             {project.frontmatter.bottleneck && (
                               <div className="p-3.5 rounded-lg bg-zinc-900/40 border border-zinc-800 text-xs">
                                 <span className="block font-mono text-amber-500 uppercase font-semibold tracking-wide">
-                                  Current Bottleneck
+                                  {settingsFm.current_bottleneck_label || "Current Bottleneck"}
                                 </span>
                                 <p className="mt-1 text-zinc-300">{project.frontmatter.bottleneck}</p>
                               </div>
@@ -899,7 +898,7 @@ export default function App() {
                             {project.frontmatter.milestone && (
                               <div className="p-3.5 rounded-lg bg-zinc-900/40 border border-zinc-800 text-xs">
                                 <span className="block font-mono text-cyan-400 uppercase font-semibold tracking-wide">
-                                  Next Milestone
+                                  {settingsFm.next_milestone_label || "Next Milestone"}
                                 </span>
                                 <p className="mt-1 text-zinc-300">{project.frontmatter.milestone}</p>
                               </div>
@@ -914,14 +913,14 @@ export default function App() {
                             onNavigate={(target) => {
                               const targetNode = getNodeBySlug(target);
                               if (targetNode) {
-                                if (targetNode.type === "project")
-                                  navigateTo("project-detail", targetNode.slug);
-                                else if (targetNode.type === "lab-notebook")
-                                  navigateTo("lab-detail", targetNode.slug);
-                                else if (targetNode.type === "paper")
-                                  navigateTo("paper-detail", targetNode.slug);
-                                else if (targetNode.type === "research-note")
-                                  navigateTo("research-detail", targetNode.slug, targetNode.topic);
+                                  if (targetNode.type === "project")
+                                    navigateTo("project-detail", targetNode.slug);
+                                  else if (targetNode.type === "lab-notebook")
+                                    navigateTo("lab-detail", targetNode.slug);
+                                  else if (targetNode.type === "paper")
+                                    navigateTo("paper-detail", targetNode.slug);
+                                  else if (targetNode.type === "research-note")
+                                    navigateTo("research-detail", targetNode.slug, targetNode.topic);
                               }
                             }}
                             allSlugs={allSlugs}
@@ -934,7 +933,7 @@ export default function App() {
                           <div className={`p-6 rounded-xl border ${cardStyle} space-y-3.5`}>
                             <h3 className="text-xs font-semibold font-mono tracking-wider text-emerald-400 uppercase flex items-center gap-1.5">
                               <Link2 className="w-4 h-4" />
-                              <span>Referenced By (Backlinks)</span>
+                              <span>{settingsFm.referenced_by_label || "Referenced By (Backlinks)"}</span>
                             </h3>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                               {backlinks.map((node) => (
@@ -975,10 +974,10 @@ export default function App() {
                   <div className={`pb-4 border-b ${isLight ? 'border-zinc-200' : 'border-zinc-800/50'} flex flex-col sm:flex-row sm:items-center justify-between gap-4`}>
                     <div>
                       <h1 className={`text-2xl font-bold tracking-tight ${isLight ? 'text-zinc-950' : 'text-white'}`}>
-                        Living Lab Notebook
+                        {settingsFm.lab_list_title || "Living Lab Notebook"}
                       </h1>
                       <p className={`text-sm ${textSubtleStyle} mt-1.5`}>
-                        Chronological record of lab measurements, circuit debugging sessions, and code diagnostics.
+                        {settingsFm.lab_list_desc || "Chronological record of lab measurements..."}
                       </p>
                     </div>
 
@@ -987,7 +986,7 @@ export default function App() {
                       onClick={() => setWeeklyDigestMode(!weeklyDigestMode)}
                       className={`px-3 py-1.5 rounded-lg border text-xs font-mono font-medium transition-all cursor-pointer ${isLight ? 'border-zinc-200 bg-zinc-50 text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900' : 'text-zinc-300 hover:text-white border-zinc-800 bg-zinc-900/30 hover:bg-zinc-900/50'}`}
                     >
-                      {weeklyDigestMode ? "Show Chronological Feed" : "Show Weekly Digest View"}
+                      {weeklyDigestMode ? (settingsFm.weekly_digest_toggle_off || "Show Chronological Feed") : (settingsFm.weekly_digest_toggle_on || "Show Weekly Digest View")}
                     </button>
                   </div>
 
@@ -995,11 +994,9 @@ export default function App() {
                     /* Weekly digest grouping list */
                     <div className="space-y-6">
                       {(() => {
-                        // Helper to calculate year and week number of a date string
                         const getWeekAndYear = (dateStr: string) => {
                           const date = new Date(dateStr);
                           const year = date.getFullYear();
-                          // Calculate week number
                           const target = new Date(date.valueOf());
                           const dayNr = (date.getDay() + 6) % 7;
                           target.setDate(target.getDate() - dayNr + 3);
@@ -1013,7 +1010,6 @@ export default function App() {
                         };
 
                         const logs = getLabNotebook();
-                        // Group logs by year-week string
                         const groups: Record<string, typeof logs> = {};
                         for (const log of logs) {
                           const { year, week } = getWeekAndYear(log.frontmatter.date);
@@ -1027,10 +1023,10 @@ export default function App() {
                             <div className="flex items-center gap-2 pb-2.5 border-b border-zinc-800">
                               <Calendar className="w-4 h-4 text-amber-500" />
                               <h3 className="text-sm font-bold font-mono tracking-tight text-white uppercase">
-                                {weekLabel} Digest
+                                {weekLabel} {settingsFm.week_digest_label || "Digest"}
                               </h3>
                               <span className="text-[10px] font-mono text-zinc-500">
-                                ({groupLogs.length} entry logged)
+                                ({groupLogs.length} {groupLogs.length === 1 ? (settingsFm.entry_logged_label || "entry logged") : (settingsFm.entries_logged_label || "entries logged")})
                               </span>
                             </div>
 
@@ -1097,7 +1093,7 @@ export default function App() {
                               onClick={() => navigateTo("lab-detail", log.slug)}
                               className="text-xs font-mono text-emerald-400 hover:text-emerald-300 inline-flex items-center gap-1 cursor-pointer"
                             >
-                              <span>Read entry data</span>
+                              <span>{settingsFm.read_entry_data_label || "Read entry data"}</span>
                               <ChevronRight className="w-3.5 h-3.5" />
                             </button>
                           </div>
@@ -1113,7 +1109,7 @@ export default function App() {
                 <div className="space-y-6">
                   {(() => {
                     const log = getNodeBySlug(route.slug || "");
-                    if (!log) return <div>Notebook entry not found.</div>;
+                    if (!log) return <div>{settingsFm.notebook_not_found_label || "Notebook entry not found."}</div>;
 
                     const backlinks = getBacklinks(log.slug);
 
@@ -1125,14 +1121,14 @@ export default function App() {
                             onClick={() => navigateTo("lab-notebook")}
                             className="text-xs font-mono text-emerald-400 hover:underline inline-flex items-center gap-1 cursor-pointer"
                           >
-                            ← Back to lab book
+                            {settingsFm.back_to_lab_label || "← Back to lab book"}
                           </button>
 
                           <div className="space-y-2">
                             <div className="flex items-center gap-2">
                               <Calendar className="w-3.5 h-3.5 text-zinc-500" />
                               <span className="text-xs font-mono text-zinc-500">
-                                Logged: {formatDate(log.frontmatter.date)}
+                                {settingsFm.logged_label || "Logged:"} {formatDate(log.frontmatter.date)}
                               </span>
                             </div>
                             <h1 className="text-xl font-bold tracking-tight text-white">
@@ -1172,7 +1168,7 @@ export default function App() {
                           <div className={`p-6 rounded-xl border ${cardStyle} space-y-3.5`}>
                             <h3 className="text-xs font-semibold font-mono tracking-wider text-emerald-400 uppercase flex items-center gap-1.5">
                               <Link2 className="w-4 h-4" />
-                              <span>Referenced By (Backlinks)</span>
+                              <span>{settingsFm.referenced_by_label || "Referenced By (Backlinks)"}</span>
                             </h3>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                               {backlinks.map((node) => (
@@ -1212,10 +1208,10 @@ export default function App() {
                 <div className="space-y-6">
                   <div className={`pb-4 border-b ${isLight ? 'border-zinc-200' : 'border-zinc-800/50'}`}>
                     <h1 className={`text-2xl font-bold tracking-tight ${isLight ? 'text-zinc-950' : 'text-white'}`}>
-                      Structured Research Notes
+                      {settingsFm.research_list_title || "Structured Research Notes"}
                     </h1>
                     <p className={`text-sm ${textSubtleStyle} mt-1.5`}>
-                      Synthesized topic folders containing technical digests, reference mathematical models, and specs.
+                      {settingsFm.research_list_desc || "Synthesized topic folders containing specs..."}
                     </p>
                   </div>
 
@@ -1225,10 +1221,10 @@ export default function App() {
                         <div className="flex items-center gap-2 pb-2.5 border-b border-zinc-800">
                           <Layers className="w-4 h-4 text-purple-400" />
                           <h3 className="text-sm font-bold font-mono tracking-tight text-white uppercase">
-                            Topic: {topicLabel}
+                            {settingsFm.folder_label || "Folder:"} {topicLabel}
                           </h3>
                           <span className="text-[10px] font-mono text-zinc-500">
-                            ({notes.length} notes logged)
+                            ({notes.length} {settingsFm.notes_logged_label || "notes logged"})
                           </span>
                         </div>
 
@@ -1248,7 +1244,7 @@ export default function App() {
                                 onClick={() => navigateTo("research-detail", note.slug, note.topic)}
                                 className="text-xs font-mono text-emerald-400 hover:text-emerald-300 inline-flex items-center gap-1 cursor-pointer w-fit"
                               >
-                                <span>Inspect topic notes</span>
+                                <span>{settingsFm.inspect_topic_notes_label || "Inspect topic notes"}</span>
                                 <ChevronRight className="w-3.5 h-3.5" />
                               </button>
                             </div>
@@ -1265,7 +1261,7 @@ export default function App() {
                 <div className="space-y-6">
                   {(() => {
                     const note = getNodeBySlug(route.slug || "");
-                    if (!note) return <div>Research note not found.</div>;
+                    if (!note) return <div>{settingsFm.note_not_found_label || "Research note not found."}</div>;
 
                     const backlinks = getBacklinks(note.slug);
 
@@ -1277,14 +1273,14 @@ export default function App() {
                             onClick={() => navigateTo("research-notes")}
                             className="text-xs font-mono text-emerald-400 hover:underline inline-flex items-center gap-1 cursor-pointer"
                           >
-                            ← Back to topic catalog
+                            {settingsFm.back_to_research_label || "← Back to topic catalog"}
                           </button>
 
                           <div className="space-y-2">
                             <div className="flex items-center gap-2">
                               <Layers className="w-3.5 h-3.5 text-purple-400" />
                               <span className="text-xs font-mono text-zinc-500">
-                                Folder: {note.frontmatter.topic || note.topic || "General"} • Logged: {formatDate(note.frontmatter.date)}
+                                {settingsFm.folder_label || "Folder:"} {note.frontmatter.topic || note.topic || "General"} • {settingsFm.logged_label || "Logged:"} {formatDate(note.frontmatter.date)}
                               </span>
                             </div>
                             <h1 className="text-xl font-bold tracking-tight text-white">
@@ -1324,7 +1320,7 @@ export default function App() {
                           <div className={`p-6 rounded-xl border ${cardStyle} space-y-3.5`}>
                             <h3 className="text-xs font-semibold font-mono tracking-wider text-emerald-400 uppercase flex items-center gap-1.5">
                               <Link2 className="w-4 h-4" />
-                              <span>Referenced By (Backlinks)</span>
+                              <span>{settingsFm.referenced_by_label || "Referenced By (Backlinks)"}</span>
                             </h3>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                               {backlinks.map((node) => (
@@ -1364,10 +1360,10 @@ export default function App() {
                 <div className="space-y-6">
                   <div className={`pb-4 border-b ${isLight ? 'border-zinc-200' : 'border-zinc-800/50'}`}>
                     <h1 className={`text-2xl font-bold tracking-tight ${isLight ? 'text-zinc-950' : 'text-white'}`}>
-                      Reviewed Scientific Literature
+                      {settingsFm.paper_list_title || "Reviewed Scientific Literature"}
                     </h1>
                     <p className={`text-sm ${textSubtleStyle} mt-1.5`}>
-                      Peer-reviewed manuscripts read, summarized, and cataloged with critical design reviews.
+                      {settingsFm.paper_list_desc || "Peer-reviewed manuscripts summarized..."}
                     </p>
                   </div>
 
@@ -1380,10 +1376,10 @@ export default function App() {
                         <div className="space-y-1.5 max-w-xl">
                           <div className="flex flex-wrap items-center gap-2">
                             <span className="px-1.5 py-0.5 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 text-[9px] font-mono">
-                              RATING: {paper.frontmatter.rating || "N/A"}
+                              {settingsFm.rating_label || "RATING:"} {paper.frontmatter.rating || "N/A"}
                             </span>
                             <span className="text-xs font-mono text-zinc-500">
-                              Reviewed: {formatDate(paper.frontmatter.date)}
+                              {settingsFm.reviewed_label || "Reviewed:"} {formatDate(paper.frontmatter.date)}
                             </span>
                           </div>
                           <h3 className="text-base font-bold text-white hover:text-emerald-400 transition-colors">
@@ -1401,7 +1397,7 @@ export default function App() {
                           onClick={() => navigateTo("paper-detail", paper.slug)}
                           className="text-xs font-mono text-emerald-400 hover:text-emerald-300 inline-flex items-center gap-1 shrink-0 cursor-pointer"
                         >
-                          <span>Examine review</span>
+                          <span>{settingsFm.examine_review_label || "Examine review"}</span>
                           <ChevronRight className="w-3.5 h-3.5" />
                         </button>
                       </div>
@@ -1415,7 +1411,7 @@ export default function App() {
                 <div className="space-y-6">
                   {(() => {
                     const paper = getNodeBySlug(route.slug || "");
-                    if (!paper) return <div>Paper review not found.</div>;
+                    if (!paper) return <div>{settingsFm.paper_not_found_label || "Paper review not found."}</div>;
 
                     const backlinks = getBacklinks(paper.slug);
 
@@ -1427,28 +1423,28 @@ export default function App() {
                             onClick={() => navigateTo("papers")}
                             className="text-xs font-mono text-emerald-400 hover:underline inline-flex items-center gap-1 cursor-pointer"
                           >
-                            ← Back to literature feed
+                            {settingsFm.back_to_papers_label || "← Back to literature feed"}
                           </button>
 
                           <div className="space-y-2">
                             <div className="flex flex-wrap items-center justify-between gap-2">
                               <div className="flex items-center gap-2.5">
                                 <span className="px-1.5 py-0.5 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 text-[9px] font-mono">
-                                  LITERATURE REVIEW
+                                  {settingsFm.literature_review_label || "LITERATURE REVIEW"}
                                 </span>
                                 <span className="text-xs font-mono text-zinc-500">
-                                  Date Analyzed: {formatDate(paper.frontmatter.date)}
+                                  {settingsFm.date_analyzed_label || "Date Analyzed:"} {formatDate(paper.frontmatter.date)}
                                 </span>
                               </div>
                               <div className="text-xs font-mono text-emerald-400">
-                                Personal Rating: {paper.frontmatter.rating}
+                                {settingsFm.personal_rating_label || "Personal Rating:"} {paper.frontmatter.rating}
                               </div>
                             </div>
                             <h1 className="text-xl font-bold tracking-tight text-white">
                               {paper.frontmatter.title}
                             </h1>
                             <p className="text-sm font-mono text-zinc-300">
-                              Authors/Source: {paper.frontmatter.author}
+                              {settingsFm.authors_source_label || "Authors/Source:"} {paper.frontmatter.author}
                             </p>
                           </div>
 
@@ -1484,7 +1480,7 @@ export default function App() {
                           <div className={`p-6 rounded-xl border ${cardStyle} space-y-3.5`}>
                             <h3 className="text-xs font-semibold font-mono tracking-wider text-emerald-400 uppercase flex items-center gap-1.5">
                               <Link2 className="w-4 h-4" />
-                              <span>Referenced By (Backlinks)</span>
+                              <span>{settingsFm.referenced_by_label || "Referenced By (Backlinks)"}</span>
                             </h3>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                               {backlinks.map((node) => (
@@ -1524,16 +1520,16 @@ export default function App() {
                 <div className="space-y-6">
                   {(() => {
                     const resourceNode = getResources()[0]; // Standard main resource file
-                    if (!resourceNode) return <div>No resources indexed.</div>;
+                    if (!resourceNode) return <div>{settingsFm.no_resources_label || "No resources indexed."}</div>;
 
                     return (
                       <div className="space-y-6">
                         <div className={`pb-4 border-b ${isLight ? 'border-zinc-200' : 'border-zinc-800/50'}`}>
                           <h1 className={`text-2xl font-bold tracking-tight ${isLight ? 'text-zinc-950' : 'text-white'}`}>
-                            {resourceNode.frontmatter.title || "Curated Lab Resources"}
+                            {resourceNode.frontmatter.title}
                           </h1>
                           <p className={`text-sm ${textSubtleStyle} mt-1.5`}>
-                            {resourceNode.frontmatter.summary || "Open-source software libraries, diagnostic packages, datasets, and firmware references."}
+                            {resourceNode.frontmatter.summary}
                           </p>
                         </div>
 
@@ -1568,39 +1564,38 @@ export default function App() {
                   <div className={`p-6 sm:p-8 rounded-xl border ${cardStyle} space-y-6`}>
                     <div>
                       <h1 className={`text-2xl font-bold tracking-tight ${isLight ? 'text-zinc-950' : 'text-white'}`}>
-                        Let's Collaborate
+                        {settingsFm.contact_title || "Let's Collaborate"}
                       </h1>
                       <p className={`text-sm ${textSubtleStyle} mt-1.5`}>
-                        Have questions about board schematics, signal sorting, or neural decoders?
-                        Get in touch below.
+                        {settingsFm.contact_desc || "Get in touch below."}
                       </p>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       {[
                         {
-                          title: "Institutional Email",
+                          title: settingsFm.institutional_email_label || "Institutional Email",
                           desc: profile?.frontmatter.email || "raonar@example.com",
                           href: `mailto:${profile?.frontmatter.email || "raonar@example.com"}`,
-                          action: "Send electronic mail",
+                          action: settingsFm.institutional_email_desc || "Send electronic mail",
                         },
                         {
-                          title: "GitHub Repository",
+                          title: settingsFm.github_repo_label || "GitHub Repository",
                           desc: profile?.frontmatter.github ? profile.frontmatter.github.replace(/^https?:\/\//, "") : "github.com/raonar",
                           href: profile?.frontmatter.github || "https://github.com/raonar",
-                          action: "Review firmware & CAD files",
+                          action: settingsFm.github_repo_desc || "Review firmware & CAD files",
                         },
                         {
-                          title: "LinkedIn Profile",
+                          title: settingsFm.linkedin_profile_label || "LinkedIn Profile",
                           desc: profile?.frontmatter.linkedin ? profile.frontmatter.linkedin.replace(/^https?:\/\//, "") : "linkedin.com/in/raonar",
                           href: profile?.frontmatter.linkedin || "https://linkedin.com",
-                          action: "View professional history",
+                          action: settingsFm.linkedin_profile_desc || "View professional history",
                         },
                         {
-                          title: "Google Scholar",
+                          title: settingsFm.google_scholar_label || "Google Scholar",
                           desc: profile?.frontmatter.scholar ? profile.frontmatter.scholar.replace(/^https?:\/\//, "") : "scholar.google.com/raonar",
                           href: profile?.frontmatter.scholar || "https://scholar.google.com",
-                          action: "Track publication citations",
+                          action: settingsFm.google_scholar_desc || "Track publication citations",
                         },
                       ].map((link, idx) => (
                         <a
@@ -1636,19 +1631,18 @@ export default function App() {
             <div className={`p-4 rounded-xl border ${cardStyle} space-y-3`}>
               <div className="flex items-center justify-between">
                 <span className={`text-[11px] font-mono font-bold uppercase ${isLight ? 'text-zinc-800' : 'text-zinc-300'}`}>
-                  Workspace Options
+                  {settingsFm.sidebar_right_title || "Workspace Options"}
                 </span>
                 <button
                   onClick={() => setShowGraph(!showGraph)}
                   className="text-[10px] font-mono text-[#32D74B] hover:underline cursor-pointer"
                 >
-                  {showGraph ? "Minimize Graph" : "Maximize Graph"}
+                  {showGraph ? (settingsFm.graph_toggle_min || "Minimize Graph") : (settingsFm.graph_toggle_max || "Maximize Graph")}
                 </button>
               </div>
 
               <div className={`text-xs leading-relaxed ${textSubtleStyle}`}>
-                Every research note, lab log, and project references other articles in their frontmatter.
-                This builds an interconnected **Wiki and Knowledge Network** instead of a flat list.
+                {settingsFm.sidebar_right_desc || "Every research note, lab log..."}
               </div>
             </div>
 
@@ -1673,9 +1667,9 @@ export default function App() {
 
             {/* Technical Footnote Credentials */}
             <div className={`text-[10px] font-mono space-y-1.5 pt-4 border-t shrink-0 ${isLight ? 'border-zinc-200 text-zinc-500' : 'border-[#2D2D30] text-[#8E9299]'}`}>
-              <div>© 2026 {profile?.frontmatter.title || "Raonar"}. CC BY-NC-SA 4.0.</div>
-              <div>Domain: <span className="text-[#32D74B] hover:underline cursor-pointer">{profile?.frontmatter.domain || "raonar.com"}</span></div>
-              <div>Source: Obsidian Git Sync Pipeline</div>
+              <div>© 2026 {profile?.frontmatter.title || "Raonar"}. {settingsFm.footer_license || "CC BY-NC-SA 4.0"}.</div>
+              <div>{settingsFm.footer_domain_label || "Domain:"} <span className="text-[#32D74B] hover:underline cursor-pointer">{profile?.frontmatter.domain || "raonar.com"}</span></div>
+              <div>{settingsFm.footer_source || "Source: Obsidian Git Sync Pipeline"}</div>
             </div>
           </section>
         </div>

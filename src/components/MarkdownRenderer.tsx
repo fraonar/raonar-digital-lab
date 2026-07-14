@@ -325,6 +325,34 @@ export function MarkdownRenderer({
         }
       }
 
+      // 4.5. Images: ![alt](url)
+      if (text.startsWith("![", i)) {
+        const closeBracket = text.indexOf("]", i + 2);
+        if (closeBracket !== -1 && text[closeBracket + 1] === "(") {
+          const closeParen = text.indexOf(")", closeBracket + 1);
+          if (closeParen !== -1) {
+            const altText = text.slice(i + 2, closeBracket);
+            let imgUrl = text.slice(closeBracket + 2, closeParen);
+
+            // Handle relative image paths
+            if (!imgUrl.startsWith("http://") && !imgUrl.startsWith("https://") && !imgUrl.startsWith("/")) {
+              imgUrl = "/" + imgUrl;
+            }
+
+            result.push(
+              <img
+                key={`img-${keyIdx++}`}
+                src={imgUrl}
+                alt={altText}
+                className={`max-w-full h-auto rounded-lg my-4 inline-block border ${isLight ? 'border-zinc-200' : 'border-zinc-800'}`}
+              />
+            );
+            i = closeParen + 1;
+            continue;
+          }
+        }
+      }
+
       // 5. Links: [text](url)
       if (text[i] === "[") {
         const closeBracket = text.indexOf("]", i);

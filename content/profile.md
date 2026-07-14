@@ -2,7 +2,7 @@
 title: "Raonar"
 subtitle: "Neural Engineering Lab"
 role: "Neural Integration Specialist & Electrical Engineer"
-avatarUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop"
+avatarUrl: "content/images/headshot.png"
 email: "raonar@example.com"
 github: "https://github.com/raonar"
 linkedin: "https://linkedin.com"
@@ -14,15 +14,6 @@ date: "2026-07-14"
 I work at the junction of **biological signals** and **embedded computing systems**. My goal is to construct hardware and algorithms that decode complex somatic impulses (specifically muscular EMG and cortical EEG) and translate them into robust digital-physical commands.
 
 Currently, I serve as a research specialist focusing on low-latency analog front-ends, lock-in optical amplification for photometry, and localized machine learning on ARM Cortex processors. I advocate strongly for **Open-Science** and reproducible open-source laboratory systems.
-
----
-
-### Structured Skills Index
-
-- **Signal Processing**: sEMG pattern recognition, FFT & STFT analysis, Welch's PSD estimation, Common Spatial Patterns (CSP)
-- **Embedded & Hardware**: STM32 & RP2040 microcontrollers, SPI DMA circular buffers, Multi-layer high-speed PCB (KiCad), Differential guard routing
-- **Neuroscience Targets**: ADS1292 biopotential front-ends, Ratiometric calcium GCaMP recording, EEG 10-20 somatotopic grid positioning, Motor cortex imagery (Mu/Beta)
-- **Software & Inference**: Python & PyTorch, Lab Streaming Layer (LSL) streaming, EEGNet CNN optimization, Lightweight LDA on-chip models
 
 ---
 
