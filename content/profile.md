@@ -1,14 +1,14 @@
 ---
-title: "Raonar"
-subtitle: "Neural Engineering Lab"
-role: "Neural Integration Specialist & Electrical Engineer"
-avatarUrl: "content/images/headshot.png"
-email: "raonar@example.com"
-github: "https://github.com/raonar"
-linkedin: "https://linkedin.com"
-scholar: "https://scholar.google.com"
-domain: "raonar.com"
-date: "2026-07-14"
+title: Raonar
+subtitle: ECE PES
+role: Neural Integration Specialist & Electrical Engineer
+avatarUrl: content/images/headshot.png
+email: raonar@example.com
+github: https://github.com/raonar
+linkedin: https://linkedin.com
+scholar: https://scholar.google.com
+domain: raonar.com
+date: 2026-07-14
 ---
 
 I work at the junction of **biological signals** and **embedded computing systems**. My goal is to construct hardware and algorithms that decode complex somatic impulses (specifically muscular EMG and cortical EEG) and translate them into robust digital-physical commands.
