@@ -1,7 +1,7 @@
 ---
 title: Raonar
 subtitle: ECE PES
-role: Neural Integration Specialist & Electrical Engineer
+role: ECE Engineer @PES University
 avatarUrl: content/images/headshot.png
 email: raonar@example.com
 github: https://github.com/raonar
