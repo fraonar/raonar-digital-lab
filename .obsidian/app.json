@@ -1,0 +1,10 @@
+﻿{
+    "userIgnoreFilters":  [
+                              "node_modules/",
+                              "dist/",
+                              "src/",
+                              ".git/",
+                              ".github/",
+                              ".vercel/"
+                          ]
+}

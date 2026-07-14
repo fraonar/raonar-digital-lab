@@ -8,3 +8,8 @@ coverage/
 !.env.example
 
 .vercel
+
+# Obsidian local workspace configuration
+.obsidian/workspace.json
+.obsidian/workspace-mobile.json
+
