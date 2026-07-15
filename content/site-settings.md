@@ -1,6 +1,6 @@
 ---
 title: "Site Settings"
-site_title: "Digital Engineering Laboratory"
+site_title: "raonar.md"
 date: "2026-07-14"
 nav_home: "HOME"
 nav_about: "ABOUT"
