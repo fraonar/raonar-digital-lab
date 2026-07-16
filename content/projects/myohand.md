@@ -1,12 +1,15 @@
 ---
-title: "MyoHand: A Low-Cost EMG-Controlled Prosthetic Hand"
-date: "2026-07-12"
-tags: ["EMG", "Biomedical Signal Processing", "Embedded Systems", "Robotics"]
-status: "active"
-links: ["spi-dma-acquisition", "fourier-transforms", "hochberg-2012-reach"]
-bottleneck: "Fine-tuning signal processing cascade to filter out forearm muscle crosstalk during pinch grips."
-milestone: "Designing PCB v2.0 for integrated battery management and Bluetooth telemetry."
-summary: "An open-source, affordable prosthetic hand utilizing multi-channel EMG sensors, local pattern recognition on STM32, and high-torque micro-servos."
+title:
+date: 2026-07-16
+tags:
+status: active
+links:
+  - spi-dma-acquisition
+  - fourier-transforms
+  - hochberg-2012-reach
+bottleneck: Fine-tuning signal processing cascade to filter out forearm muscle crosstalk during pinch grips.
+milestone: Designing PCB v2.0 for integrated battery management and Bluetooth telemetry.
+summary: An open-source, affordable prosthetic hand utilizing multi-channel EMG sensors, local pattern recognition on STM32, and high-torque micro-servos.
 ---
 
 ## Idea & Inspiration
