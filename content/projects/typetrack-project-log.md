@@ -1,18 +1,12 @@
-# TypeTrack
-
-## Properties
-
-| | |
-|---|---|
-| **title** | Empty |
-| **date** | 📅 16-07-2026 |
-| **tags** | Empty |
-| **status** | active |
-| **links** | `manifest-v3` `content-script-injection` `wpm-calculation` |
-| **bottleneck** | Reliably attaching to text fields across shadow DOM, dynamically-loaded SPA content, and same-origin iframes — without adding noticeable input lag. |
-| **milestone** | Working content script on Gmail, Notion, and X as a compatibility proof-of-concept before wider testing. |
-| **summary** | A privacy-first browser extension that tracks real-time typing speed across every text field on the web, so people can see gradual progress they'd otherwise never notice. |
-
+---
+title: "TypeTrack"
+date: "2026-07-16"
+tags: ["Extension", "JavaScript", "Manifest V3"]
+status: "active"
+links: ["manifest-v3", "content-script-injection", "wpm-calculation"]
+summary: "A privacy-first browser extension that tracks real-time typing speed across every text field on the web, so people can see gradual progress they'd otherwise never notice."
+bottleneck: "Reliably attaching to text fields across shadow DOM, dynamically-loaded SPA content, and same-origin iframes — without adding noticeable input lag."
+milestone: "Working content script on Gmail, Notion, and X as a compatibility proof-of-concept before wider testing."
 ---
 
 ## Idea & Inspiration

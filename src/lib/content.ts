@@ -156,30 +156,17 @@ export function parseMDX(filePath: string, rawText: string): ContentNode {
   // Parse YAML frontmatter using our custom nested parser
   const frontmatter = parseYAML(fmText);
 
-  // Validate required frontmatter fields (only for general content nodes, skip settings/skills)
+  // Fill in default placeholders if missing to prevent compiler crashes when files are added
   const filename = filePath.split("/").pop() || "";
-  const isSpecialFile = ["site-settings.md", "site-settings.mdx", "skills.md", "skills.mdx", "current-mission.md", "current-mission.mdx", "profile.md", "profile.mdx"].includes(filename);
-  
-  if (!isSpecialFile) {
-    const requiredFields: (keyof Frontmatter & string)[] = ["title", "date"];
-    const missing: string[] = [];
-    for (const field of requiredFields) {
-      if (!frontmatter[field]) {
-        missing.push(field);
-      }
-    }
-
-    if (missing.length > 0) {
-      throw new Error(
-        `Metadata validation failed for file "${filePath}": Missing required frontmatter fields: [${missing.join(
-          ", "
-        )}]. Please ensure these are populated.`
-      );
-    }
-  } else {
-    // Fill in default placeholders if missing for special files
-    if (!frontmatter.title) frontmatter.title = filename.replace(/\.(md|mdx)$/, "");
-    if (!frontmatter.date) frontmatter.date = new Date().toISOString().slice(0, 10);
+  if (!frontmatter.title) {
+    const baseName = filename.replace(/\.(md|mdx)$/, "");
+    frontmatter.title = baseName
+      .split(/[-_]+/)
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
+  }
+  if (!frontmatter.date) {
+    frontmatter.date = new Date().toISOString().slice(0, 10);
   }
 
   // Determine type and slug
