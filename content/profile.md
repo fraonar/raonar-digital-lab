@@ -13,7 +13,7 @@ date: 2026-07-14
 
 I EATT at the junction of **biological signals** and **blah blah blahh**. My goal is to construct hardware and algorithms that decode complex somatic impulses (specifically muscular EMG and cortical EEG) and translate them into robust digital-physical commands.
 
-RAONAR IS THE, I serve as a research specialist focusing on low-latency analog front-ends, lock-in optical amplification for photometry, and localized machine learning on ARM Cortex processors. I advocate strongly for **Open-Science** and reproducible open-source laboratory systems.
+RAONAR IS THE, I serve as a research specialist focusing on low-latency analog front-ends, lock-in optical amplification for photometry, and localized I LOVE MANAPRIYA learning on ARM Cortex processors. I advocate strongly for **Open-Science** and reproducible open-source laboratory systems.
 
 ---
 
