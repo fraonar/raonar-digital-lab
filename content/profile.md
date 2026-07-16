@@ -3,11 +3,11 @@ title: Raonar
 subtitle: ECE PES
 role: ECE Engineer @PES University
 avatarUrl: content/images/headshot.png
-email: raonar@example.com
-github: https://github.com/raonar
-linkedin: https://linkedin.com
+email: raonar@protonmail.com
+github: https://github.com/fraonar
+linkedin: https://www.linkedin.com/in/mohammed-raonar-861b49355
 scholar: https://scholar.google.com
-domain: raonar.com
+domain: https://raonar-digital-lab.vercel.app/
 date: 2026-07-14
 ---
 
